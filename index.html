@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Una carta para ti</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 50% 30%, #2a0a0a 0%, #0d0005 60%, #000 100%);
+      padding: 2rem;
+      font-family: 'Cormorant Garamond', serif;
+      position: relative; overflow: hidden;
+    }
+
+    body::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='0.5' fill='%23ffffff22'/%3E%3Ccircle cx='10' cy='10' r='0.3' fill='%23ffffff15'/%3E%3Ccircle cx='50' cy='15' r='0.4' fill='%23ffffff18'/%3E%3Ccircle cx='5' cy='45' r='0.3' fill='%23ffffff12'/%3E%3Ccircle cx='55' cy='50' r='0.5' fill='%23ffffff20'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    .petals { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+    .petal {
+      position: absolute; width: 8px; height: 12px;
+      background: linear-gradient(135deg, #d4527a, #8b1a4a);
+      border-radius: 50% 0 50% 0; opacity: 0;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      0%   { transform: translateY(-20px) rotate(0deg);   opacity: 0.7; }
+      100% { transform: translateY(110vh) rotate(360deg); opacity: 0;   }
+    }
+
+    #app {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: center; width: 100%;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0);    }
+    }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 1.5rem; animation: fadeIn 1s ease;
+    }
+    .lock-icon {
+      width: 70px; height: 70px; border: 2px solid #c0616b; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; color: #e8a0a0;
+      animation: pulse 2s ease-in-out infinite; box-shadow: 0 0 20px #c0616b44;
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 20px #c0616b44; }
+      50%     { box-shadow: 0 0 35px #c0616b88; }
+    }
+    .login-title    { font-family: 'Cinzel', serif; font-size: 1.4rem; color: #f0d0d0; letter-spacing: 0.15em; text-align: center; }
+    .login-subtitle { font-size: 1rem; color: #c08080; font-style: italic; text-align: center; }
+    .date-hint      { font-size: 0.85rem; color: #8a5555; text-align: center; letter-spacing: 0.05em; }
+
+    .input-group { display: flex; flex-direction: column; gap: 0.5rem; width: 260px; }
+    .input-group label { font-family: 'Cinzel', serif; font-size: 0.75rem; color: #c08080; letter-spacing: 0.1em; }
+    .input-group input {
+      background: #1a0a0a; border: 1px solid #6b2a2a; border-radius: 4px;
+      padding: 0.65rem 1rem; color: #f0d0d0;
+      font-family: 'Cormorant Garamond', serif; font-size: 1rem;
+      letter-spacing: 0.15em; outline: none; transition: border-color 0.3s; width: 100%;
+    }
+    .input-group input:focus { border-color: #c0616b; box-shadow: 0 0 10px #c0616b22; }
+
+    .btn-unlock {
+      width: 260px; padding: 0.75rem;
+      background: linear-gradient(135deg, #7a1a2a, #c0404a);
+      border: none; border-radius: 4px; color: #ffd0d0;
+      font-family: 'Cinzel', serif; font-size: 0.9rem; letter-spacing: 0.15em;
+      cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px #c0404a44;
+    }
+    .btn-unlock:hover { background: linear-gradient(135deg, #9a2a3a, #d0505a); transform: translateY(-2px); }
+    .error-msg { color: #e05060; font-size: 0.85rem; font-style: italic; height: 1.2em; text-align: center; }
+
+    /* ── BOOK ── */
+    #book-screen { display: none; z-index: 10; perspective: 1200px; animation: fadeIn 1s ease; }
+    .book-container { position: relative; width: 560px; max-width: 95vw; }
+    .book { width: 100%; position: relative; transform-style: preserve-3d; animation: bookAppear 1.2s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+    @keyframes bookAppear {
+      0%   { transform: rotateY(-80deg) rotateX(15deg) scale(0.6); opacity: 0; }
+      100% { transform: rotateY(-8deg)  rotateX(3deg)  scale(1);   opacity: 1; }
+    }
+    .book-spread { display: flex; border-radius: 4px 12px 12px 4px; overflow: hidden; box-shadow: -15px 15px 40px #00000088, 5px 5px 20px #00000055; }
+    .page-left  { width: 50%; background: linear-gradient(to right, #1a0a08, #2a1210); border-right: 1px solid #5a2020; padding: 2rem 1.5rem 2rem 2rem; position: relative; min-height: 420px; }
+    .page-right { width: 50%; background: linear-gradient(to left, #1e0c0a, #2a1210); padding: 2rem 2rem 2rem 1.5rem; position: relative; min-height: 420px; }
+    .page-left::before { content: ''; position: absolute; top: 0; right: 0; width: 12px; height: 100%; background: linear-gradient(to right, transparent, #4a1515); }
+
+    .page-number { font-family: 'Cinzel', serif; font-size: 0.65rem; color: #8a4040; letter-spacing: 0.2em; margin-bottom: 1.5rem; }
+    .page-number.right { text-align: right; }
+    .chapter-title { font-family: 'Cinzel', serif; font-size: 0.7rem; color: #c06060; letter-spacing: 0.25em; margin-bottom: 0.8rem; }
+    .drop-cap { float: left; font-size: 4rem; line-height: 0.7; margin-right: 0.1rem; margin-top: 0.3rem; color: #d06060; font-style: italic; font-weight: 600; }
+    .page-text { font-size: 0.92rem; color: #e8c8c0; line-height: 1.9; font-style: italic; }
+
+    .divider { display: flex; align-items: center; gap: 0.5rem; margin: 1rem 0; }
+    .divider-line  { flex: 1; height: 1px; background: linear-gradient(to right, transparent, #8a4040, transparent); }
+    .divider-heart { color: #c06060; font-size: 0.8rem; }
+
+    .book-spine { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 8px; height: 100%; background: linear-gradient(to right, #3a1010, #6a2020, #3a1010); z-index: 5; }
+    .page-decoration { position: absolute; bottom: 1.5rem; font-size: 1.2rem; color: #6a2a2a; opacity: 0.5; }
+    .page-decoration.left  { left: 1.5rem; }
+    .page-decoration.right { right: 1.5rem; }
+    .book-cover-shadow { position: absolute; bottom: -25px; left: 5%; right: 5%; height: 25px; background: radial-gradient(ellipse, #00000077 0%, transparent 70%); filter: blur(6px); }
+
+    .corner-ornament { position: absolute; width: 20px; height: 20px; opacity: 0.3; }
+    .corner-ornament.tl { top: 8px;    left: 8px;  border-top: 1px solid #c06060; border-left: 1px solid #c06060;   }
+    .corner-ornament.tr { top: 8px;    right: 8px; border-top: 1px solid #c06060; border-right: 1px solid #c06060;  }
+    .corner-ornament.bl { bottom: 8px; left: 8px;  border-bottom: 1px solid #c06060; border-left: 1px solid #c06060;  }
+    .corner-ornament.br { bottom: 8px; right: 8px; border-bottom: 1px solid #c06060; border-right: 1px solid #c06060; }
+
+    .page-image-placeholder { width: 100%; aspect-ratio: 4/3; background: linear-gradient(135deg, #2a0f0f, #3a1515); border: 1px solid #5a2525; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: #6a3030; font-size: 0.75rem; letter-spacing: 0.1em; margin: 1rem 0; font-family: 'Cinzel', serif; }
+    .signature { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-style: italic; color: #d08080; text-align: right; margin-top: 1rem; }
+
+    .btn-heart-anim {
+      display: block; margin: 1.2rem auto 0;
+      background: none; border: 1px solid #8a3040; color: #e8a0b0;
+      font-family: 'Cinzel', serif; font-size: 0.72rem; letter-spacing: 0.15em;
+      padding: 0.45rem 1.2rem; border-radius: 3px; cursor: pointer; transition: all 0.3s;
+    }
+    .btn-heart-anim:hover { background: #3a1020; color: #ffccd8; border-color: #c06070; }
+
+    /* ── NEON HEART SCREEN ── */
+    #heart-screen {
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 20; animation: fadeIn 0.6s ease; gap: 1.5rem;
+    }
+    #heartCanvas { display: block; }
+
+    .neon-text-wrap {
+  position: absolute; /* 🔴 añadido */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%); /* 🔴 centra en el corazón */
+  text-align: center;
+  pointer-events: none;
+}
+
+.neon-line1 {
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  color: #fff;
+  display: block;
+  text-shadow: 0 0 6px #ff4488, 0 0 14px #ff4488, 0 0 30px #ff2266;
+}
+
+.neon-line2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-style: italic;
+  color: #ffaac8;
+  display: block;
+  margin-top: 0.3rem;
+  text-shadow: 0 0 6px #ff88aa, 0 0 16px #ff4488;
+    }
+    .btn-back:hover { background: #3a1010; color: #f0c0c0; }
+
+    @media (max-width: 580px) {
+      .book-spread { flex-direction: column; border-radius: 4px; }
+      .page-left, .page-right { width: 100%; min-height: auto; }
+      .book-spine { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="petals" id="petals"></div>
+
+<div id="app">
+
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div class="lock-icon">🔒</div>
+    <div class="login-title">Una carta para ti</div>
+    <div class="login-subtitle">Este mensaje espera el momento perfecto</div>
+    <div id="date-status" class="date-hint"></div>
+    <div style="display:flex;flex-direction:column;gap:1rem;align-items:center;">
+      <div class="input-group">
+        <label>Contraseña</label>
+        <input type="password" id="password-input" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')tryUnlock()"/>
+      </div>
+      <button class="btn-unlock" onclick="tryUnlock()">Abrir la carta</button>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- BOOK -->
+  <div id="book-screen">
+    <div class="book-container">
+      <div class="book">
+        <div class="book-spread">
+
+          <div class="page-left">
+            <div class="corner-ornament tl"></div>
+            <div class="corner-ornament bl"></div>
+            <div class="page-number">— i —</div>
+            <div class="chapter-title">Capítulo primero</div>
+            <div class="page-text">
+              <span class="drop-cap">D</span>
+              esde el primer momento en que nuestros caminos se cruzaron, supe que algo
+              en el universo había conspirado para que así fuera. Hay personas que llegan
+              a tu vida como una brisa suave, y otras que llegan como una tormenta que
+              lo cambia todo.
+            </div>
+            <div class="divider">
+              <div class="divider-line"></div><div class="divider-heart">♥️</div><div class="divider-line"></div>
+            </div>
+            <div class="page-text">
+              Tú fuiste las dos cosas al mismo tiempo. Llegaste con calma y, sin que me
+              diera cuenta, lo transformaste todo. Cada risa compartida, cada silencio
+              cómodo, cada mirada que decía más que mil palabras...
+            </div>
+            <div class="page-decoration left">❧</div>
+          </div>
+
+          <div class="book-spine"></div>
+
+          <div class="page-right">
+            <div class="corner-ornament tr"></div>
+            <div class="corner-ornament br"></div>
+            <div class="page-number right">— ii —</div>
+            <div class="page-image-placeholder">[ Tu foto aquí ]</div>
+            <div class="page-text" style="font-size:0.85rem;text-align:center;color:#c0a0a0;">
+              <em>"No te escogí por casualidad,<br>te escogí porque contigo<br>todo tiene más sentido."</em>
+            </div>
+            <div class="divider">
+              <div class="divider-line"></div><div class="divider-heart">✦</div><div class="divider-line"></div>
+            </div>
+            <div class="page-text">
+              Hoy, en este día tan especial, quiero que sepas que eres lo más valioso
+              que tengo. Gracias por existir. Gracias por quedarte.
+            </div>
+            <div class="signature">Con todo mi amor ♥️</div>
+            <button class="btn-heart-anim" onclick="showHeart()">✦ Abrir sorpresa ✦</button>
+            <div class="page-decoration right">❧</div>
+          </div>
+
+        </div>
+        <div class="book-cover-shadow"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEON HEART -->
+  <div id="heart-screen">
+    <canvas id="heartCanvas" width="500" height="500"></canvas>
+    <div class="neon-text-wrap">
+      <!-- ✏️ CAMBIA EL TEXTO AQUÍ -->
+      <span class="neon-line1">Para siempre</span>
+      <span class="neon-line2">te amaré</span>
+    </div>
+    <button class="btn-back" onclick="backToBook()">← Volver a la carta</button>
+  </div>
+
+</div>
+
+<script>
+  // =============================================
+  // PERSONALIZA AQUÍ:
+  const PASSWORD    = "12/10/2025";      
+  const UNLOCK_DATE = { month: 5, day: 1 };  
+  // =============================================
+
+  function checkDate() {
+    const n = new Date();
+    return (n.getMonth() + 1) === UNLOCK_DATE.month && n.getDate() === UNLOCK_DATE.day;
+  }
+
+  function getDaysUntil() {
+    const now = new Date();
+    const t   = new Date(now.getFullYear(), UNLOCK_DATE.month - 1, UNLOCK_DATE.day);
+    if (t < now) t.setFullYear(t.getFullYear() + 1);
+    return Math.ceil((t - now) / (1000 * 60 * 60 * 24));
+  }
+
+  window.onload = function () {
+    const s = document.getElementById('date-status');
+    if (checkDate()) {
+      s.textContent = '✦ Hoy es el día especial — la carta está lista para ti ✦';
+      s.style.color = '#d08060';
+    } else {
+      const d = getDaysUntil();
+      s.textContent = `Se desbloqueará el 12 de mayo · Faltan ${d} día${d !== 1 ? 's' : ''}`;
+    }
+    createPetals();
+  };
+
+  function tryUnlock() {
+    const inp = document.getElementById('password-input');
+    const err = document.getElementById('error-msg');
+    if (!checkDate()) {
+      err.textContent = 'Todavía no es el momento... espera al 12 de mayo 🌸';
+      inp.value = ''; return;
+    }
+    if (inp.value === PASSWORD) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('book-screen').style.display  = 'block';
+      err.textContent = '';
+    } else {
+      err.textContent = 'Contraseña incorrecta ♥️';
+      inp.value = ''; inp.focus();
+    }
+  }
+
+  function showHeart() {
+    document.getElementById('book-screen').style.display = 'none';
+    const hs = document.getElementById('heart-screen');
+    hs.style.display = 'flex';
+    startNeonHeart();
+  }
+
+  function backToBook() {
+    document.getElementById('heart-screen').style.display = 'none';
+    document.getElementById('book-screen').style.display  = 'block';
+    if (window._raf) cancelAnimationFrame(window._raf);
+  }
+
+  function createPetals() {
+    const c = document.getElementById('petals');
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('div');
+      p.className = 'petal';
+      p.style.left              = Math.random() * 100 + '%';
+      p.style.animationDuration = (4 + Math.random() * 6) + 's';
+      p.style.animationDelay    = (Math.random() * 8) + 's';
+      p.style.transform         = `scale(${0.6 + Math.random() * 0.8})`;
+      c.appendChild(p);
+    }
+  }
+
+  function startNeonHeart() {
+    const canvas = document.getElementById('heartCanvas');
+    const ctx    = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2, cy = H / 2 + 10;
+    const TOTAL_POINTS = 300;
+
+    function hx(a) { return 16 * Math.pow(Math.sin(a), 3); }
+    function hy(a) { return -(13 * Math.cos(a) - 5 * Math.cos(2*a) - 2 * Math.cos(3*a) - Math.cos(4*a)); }
+
+    const scale = 12;
+    const pts = [];
+    for (let i = 0; i <= TOTAL_POINTS; i++) {
+      const a = (i / TOTAL_POINTS) * Math.PI * 2;
+      pts.push({ x: cx + hx(a) * scale, y: cy + hy(a) * scale });
+    }
+
+    let drawn = 0;
+    let startTime = null;
+    const DRAW_DURATION = 2200;
+    let phase = 'drawing';
+    let glowT = 0;
+
+    function drawFrame(ts) {
+      if (!startTime) startTime = ts;
+      const elapsed = ts - startTime;
+      ctx.clearRect(0, 0, W, H);
+
+      if (phase === 'drawing') {
+        drawn = Math.min(TOTAL_POINTS, Math.floor((elapsed / DRAW_DURATION) * TOTAL_POINTS));
+
+        /* trazo principal */
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i <= drawn; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.strokeStyle  = '#ff2255';
+        ctx.lineWidth    = 3;
+        ctx.shadowColor  = '#ff2255';
+        ctx.shadowBlur   = 18;
+        ctx.stroke();
+        ctx.restore();
+
+        /* brillo interior */
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i <= drawn; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.strokeStyle = '#ff6688';
+        ctx.lineWidth   = 1;
+        ctx.shadowColor = '#ff88aa';
+        ctx.shadowBlur  = 8;
+        ctx.stroke();
+        ctx.restore();
+
+        /* chispa en la punta */
+        if (drawn < TOTAL_POINTS) {
+          const tip = pts[drawn];
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(tip.x, tip.y, 5, 0, Math.PI * 2);
+          ctx.fillStyle   = '#ffffff';
+          ctx.shadowColor = '#ff88ff';
+          ctx.shadowBlur  = 20;
+          ctx.fill();
+          ctx.restore();
+        }
+
+        if (drawn >= TOTAL_POINTS) { phase = 'glow'; glowT = 0; }
+
+      } else {
+        /* parpadeo neón una vez completado */
+        glowT += 0.04;
+        const flicker = 0.85 + 0.15 * Math.sin(glowT * 3.7) + 0.05 * Math.sin(glowT * 11);
+
+        [
+          { lw: 7,   color: `rgba(255,68,136,${0.25 * flicker})`,  blur: 40 },
+          { lw: 3.5, color: `rgba(255,34,85,${flicker})`,          blur: 28 },
+          { lw: 1.2, color: `rgba(255,120,160,${0.7 * flicker})`,  blur: 12 },
+        ].forEach(({ lw, color, blur }) => {
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(pts[0].x, pts[0].y);
+          for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+          ctx.closePath();
+          ctx.strokeStyle = color;
+          ctx.lineWidth   = lw;
+          ctx.shadowColor = '#ff2255';
+          ctx.shadowBlur  = blur * flicker;
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
+
+      window._raf = requestAnimationFrame(drawFrame);
+    }
+
+    if (window._raf) cancelAnimationFrame(window._raf);
+    window._raf = requestAnimationFrame(drawFrame);
+  }
+</script>
+</body>
+</html>
