@@ -293,8 +293,8 @@
 
 </div>
 <script>
-  const PASSWORD    = "12/10/2025";
-  const UNLOCK_DATE = { month: 5, day: 12 };
+  const PASSWORD    = "1";
+  const UNLOCK_DATE = { month: 5, day: 12};
 
   const REASONS = [
     "A tu lado me siento en paz",
@@ -318,7 +318,8 @@
 
   function checkDate() {
     const n = new Date();
-    return (n.getMonth() + 1) === UNLOCK_DATE.month && n.getDate() === UNLOCK_DATE.day;
+    const unlock = new Date(n.getFullYear(), UNLOCK_DATE.month - 1, UNLOCK_DATE.day);
+    return n >= unlock;
   }
   function getDaysUntil() {
     const now = new Date();
